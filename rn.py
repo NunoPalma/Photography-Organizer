@@ -1,12 +1,19 @@
 import argparse 
-import os 
+import os
+from PIL import Image
+from shutil import copy
+
 parser = argparse.ArgumentParser()
 sub_parsers = parser.add_subparsers()
 rename_parser = sub_parsers.add_parser('rn')
-order_parser = sub_parsers.add_parser('order')
+rename_parser.set_defaults(which='rn')
+organization_parser = sub_parsers.add_parser('order')
+organization_parser.set_defaults(which='order')
 
 directory = os.getcwd() 
 
+
+############# rn - rename #############
 def rename(args):
 	i = args.v
 	for file in os.listdir(args.d):
@@ -38,6 +45,9 @@ def aux(value, limit):
 		return value[:-1] + chr(ord(value[-1]) + 1)
 
 
+#######################################
+
+
 def validate_file(file_path):
 	if os.path.isfile(file_path):
 		if file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp')): #Figure out if the user should specify the extensions
@@ -50,6 +60,11 @@ def add_args():
 	rename_parser.add_argument('-p', type=str, action='store', default='', help='Desired prefix.')
 	rename_parser.add_argument('-v', type=str, action='store', default='0', help='The desired starting value.')
 
+	organization_parser.add_argument('-d', type=str, action='store', default=directory, help='Desired directory. If no directory is given, the current directory is used.')
+	organization_parser.add_argument('organization_method', type=str, action='store', choices=['day', 'month', 'year'], help='')
+
+
+
 
 def parse_args(args):
 	if args.d:
@@ -60,12 +75,47 @@ def parse_args(args):
 			args.d += '/'
 
 
+def organize(args):
+	if args.organization_method in ['day', 'month', 'year']:
+		organize_by_date(args)
+
+
+def organize_by_date(args):
+	organization_folder = 'organized_by_date/'
+	os.mkdir(args.d + organization_folder)
+	if args.organization_method == 'year':
+		index = 0
+	elif args.organization_method == 'month':
+		index = 1
+	else:
+		index = 2
+
+	for file in os.listdir(args.d):
+		file_path = args.d + file
+		if not validate_file(file_path):
+			continue
+		date = Image.open(file_path)._getexif()[36867].split(':')[index]
+		print(date)
+
+		path = args.d + organization_folder + date
+		if not os.path.isdir(path):
+			os.mkdir(path)
+
+		copy(file_path, path)
+
+
+
+
 def main():
 	add_args()
 	args = parser.parse_args()
 	parse_args(args)
-	rename(args)
 
+	if args.which == 'rn':
+		rename(args)
+	else:
+		organize(args)
+		
 
 if __name__ == "__main__": 
 	main()
