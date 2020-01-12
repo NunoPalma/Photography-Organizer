@@ -62,7 +62,7 @@ def add_args():
 	rename_parser.add_argument('-v', type=str, action='store', default='0', help='The desired starting value.')
 
 	organization_parser.add_argument('-d', type=str, action='store', default=directory, help='Desired directory. If no directory is given, the current directory is used.')
-	organization_parser.add_argument('organization_method', type=str, action='store', choices=['day', 'month', 'year'], help='')
+	organization_parser.add_argument('organization_method', type=str, action='store', choices=['day', 'month', 'year', 'shutter_speed'], help='Organize the content by one of the following parameters')
 
 
 
@@ -76,36 +76,47 @@ def parse_args(args):
 			args.d += '/'
 
 
-def organize(args):
-	if args.organization_method in ['day', 'month', 'year']:
-		organize_by_date(args)
+def organize_data(args):
+	if args.organization_method == 'year':
+		organize(args, ['DateTimeOriginal', 'EXIF DateTimeOriginal', 1], process_date_time_data)
+	elif args.organization_method == 'month':
+		organize(args, ['DateTimeOriginal', 'EXIF DateTimeOriginal', 2], process_date_time_data)
+	elif args.organization_method == 'day':
+		organize(args, ['DateTimeOriginal', 'EXIF DateTimeOriginal', 3], process_date_time_data)
+	elif args.organization_method == 'shutter_speed':
+		organize(args, ['ExposureTime', 'EXIF ExposureTime'], process_shutter_speed_data)
+	
+
+def get_image_data(image_path, stop_tag, data_field):
+	with open(image_path, 'rb') as image:
+		tags = exifread.process_file(image, stop_tag=stop_tag, details=False)
+		return str(tags[data_field])
 
 
-def organize_by_date(args):
+def process_date_time_data(data, data_info):
+	return '-'.join(data.replace(' ', ':').split(':')[:data_info[2]])
+
+
+def process_shutter_speed_data(data, data_info):
+	return '-'.join(data.split('/')) + 's'
+
+def organize(args, data_info, process_data):
 	organization_folder = 'organized_by_date/'
 	os.mkdir(args.d + organization_folder)
-	if args.organization_method == 'year':
-		index = 1
-	elif args.organization_method == 'month':
-		index = 2
-	else:
-		index = 3
 
 	for file in os.listdir(args.d):
 		file_path = args.d + file
 		if not validate_file(file_path):
 			continue
 
-		with open(file_path, 'rb') as image:
-			tags = exifread.process_file(image, stop_tag='DateTimeOriginal', details=False)
-			date = '-'.join(str(tags['EXIF DateTimeOriginal']).replace(' ', ':').split(':')[:index])
-		
-		path = args.d + organization_folder + date
+		data = get_image_data(file_path, data_info[0], data_info[1])
+		data = process_data(data, data_info)
+	
+		path = args.d + organization_folder + data
 		if not os.path.isdir(path):
 			os.mkdir(path)
 
 		copy(file_path, path)
-
 
 
 
@@ -117,7 +128,7 @@ def main():
 	if args.which == 'rn':
 		rename(args)
 	else:
-		organize(args)
+		organize_data(args)
 		
 
 if __name__ == "__main__": 
