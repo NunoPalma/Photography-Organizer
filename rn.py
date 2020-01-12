@@ -85,11 +85,11 @@ def organize_by_date(args):
 	organization_folder = 'organized_by_date/'
 	os.mkdir(args.d + organization_folder)
 	if args.organization_method == 'year':
-		index = 0
-	elif args.organization_method == 'month':
 		index = 1
-	else:
+	elif args.organization_method == 'month':
 		index = 2
+	else:
+		index = 3
 
 	for file in os.listdir(args.d):
 		file_path = args.d + file
@@ -98,7 +98,7 @@ def organize_by_date(args):
 
 		with open(file_path, 'rb') as image:
 			tags = exifread.process_file(image)
-			date = str(tags['EXIF DateTimeOriginal']).split(':')[index]
+			date = '-'.join(str(tags['EXIF DateTimeOriginal']).replace(' ', ':').split(':')[:index])
 		
 		path = args.d + organization_folder + date
 		if not os.path.isdir(path):
