@@ -1,7 +1,8 @@
 import argparse 
 import os
-from PIL import Image
 from shutil import copy
+import exifread
+
 
 parser = argparse.ArgumentParser()
 sub_parsers = parser.add_subparsers()
@@ -50,7 +51,7 @@ def aux(value, limit):
 
 def validate_file(file_path):
 	if os.path.isfile(file_path):
-		if file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp')): #Figure out if the user should specify the extensions
+		if file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.cr2')): #Figure out if the user should specify the extensions
 			return True
 	return False
 
@@ -94,9 +95,11 @@ def organize_by_date(args):
 		file_path = args.d + file
 		if not validate_file(file_path):
 			continue
-		date = Image.open(file_path)._getexif()[36867].split(':')[index]
-		print(date)
 
+		with open(file_path, 'rb') as image:
+			tags = exifread.process_file(image)
+			date = str(tags['EXIF DateTimeOriginal']).split(':')[index]
+		
 		path = args.d + organization_folder + date
 		if not os.path.isdir(path):
 			os.mkdir(path)
