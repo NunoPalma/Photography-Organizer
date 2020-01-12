@@ -97,7 +97,7 @@ def organize_by_date(args):
 			continue
 
 		with open(file_path, 'rb') as image:
-			tags = exifread.process_file(image)
+			tags = exifread.process_file(image, stop_tag='DateTimeOriginal', details=False)
 			date = '-'.join(str(tags['EXIF DateTimeOriginal']).replace(' ', ':').split(':')[:index])
 		
 		path = args.d + organization_folder + date
