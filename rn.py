@@ -63,7 +63,7 @@ def add_args():
 
 	organization_parser.add_argument('-d', type=str, action='store', default=directory, help='Desired directory. If no directory is given, the current directory is used.')
 	organization_parser.add_argument('-f', type=str, action='store', help='Desired directory. If no directory is given, the current directory is used.')
-	organization_parser.add_argument('organization_method', type=str, action='store', choices=['day', 'month', 'year', 'shutter_speed', 'lens'], help='Organize the content by one of the following parameters')
+	organization_parser.add_argument('organization_method', type=str, action='store', choices=['day', 'month', 'year', 'shutter_speed', 'lens', 'aperture'], help='Organize the content by one of the following parameters')
 
 
 
@@ -88,6 +88,8 @@ def organize_data(args):
 		organize(args, ['ExposureTime', 'EXIF ExposureTime'], process_shutter_speed_data)
 	elif args.organization_method == 'lens':
 		organize(args, ['LensModel', 'EXIF LensModel'], process_lens_model_data)
+	elif args.organization_method == 'aperture':
+		organize(args, ['FNumber', 'EXIF FNumber'], process_aperture_data)
 	
 
 def get_image_data(image_path, stop_tag, data_field):
@@ -106,6 +108,14 @@ def process_shutter_speed_data(data, data_info):
 
 def process_lens_model_data(data, data_info):
 	return '-'.join(data.split('/'))
+
+
+def process_aperture_data(data, data_info):
+	data = data.split('/')
+	if len(data) == 2:
+		return str(float(data[0]) / float(data[1]))
+	
+	return data[0]
 
 
 def organize(args, data_info, process_data):
