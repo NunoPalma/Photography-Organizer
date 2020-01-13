@@ -4,14 +4,6 @@ import exifread
 from shutil import copy
 
 
-parser = argparse.ArgumentParser()
-sub_parsers = parser.add_subparsers()
-rename_parser = sub_parsers.add_parser('rn')
-rename_parser.set_defaults(which='rn')
-organization_parser = sub_parsers.add_parser('order')
-organization_parser.set_defaults(which='order')
-
-
 ############# general auxiliary methods #############
 
 """
@@ -29,16 +21,33 @@ def validate_file(file_path):
 
 
 """
-Defines how command-line arguments should be parsed.
+Defines how command-line arguments should be parsed and creates the desired parser.
+@return ArgumentParser parser
 """
-def add_args():
-	rename_parser.add_argument('-d', metavar='directory', type=str, action='store', default=os.getcwd(), help='Desired directory. If no directory is given, the current directory is used.')
-	rename_parser.add_argument('-p', metavar='prefix', type=str, action='store', default='', help='Desired prefix.')
-	rename_parser.add_argument('-v', metavar='value', type=str, action='store', default='0', help='The desired starting value.')
+def create_parser():
+	parser = argparse.ArgumentParser()
+	sub_parsers = parser.add_subparsers()
+	rename_parser = sub_parsers.add_parser('rn')
+	rename_parser.set_defaults(which='rn')
+	organization_parser = sub_parsers.add_parser('org')
+	organization_parser.set_defaults(which='org')
+	
+	rename_parser.add_argument('-d', metavar='directory', type=str, action='store', default=os.getcwd(),
+									help='Desired directory. If no directory is given, the current directory is used.')
+	rename_parser.add_argument('-p', metavar='prefix', type=str, action='store', default='',
+									help='Desired prefix.')
+	rename_parser.add_argument('-v', metavar='value', type=str, action='store', default='0',
+									help='The desired starting value.')
 
-	organization_parser.add_argument('-d', metavar='directory', type=str, action='store', default=os.getcwd(), help='Desired directory. If no directory is given, the current directory is used.')
-	organization_parser.add_argument('-f', metavar='folder', type=str, action='store', help='Name of the main folder where the organized folders will be stored. If no name is provided then the default name will be \'organized_by<organization method>\'')
-	organization_parser.add_argument('organization_method', type=str, action='store', choices=['day', 'month', 'year', 'shutter_speed', 'lens', 'aperture', 'ISO', 'focal_length'], help='Organize the content by one of the following parameters.')
+	organization_parser.add_argument('-d', metavar='directory', type=str, action='store', default=os.getcwd(), 
+											help='Desired directory. If no directory is given, the current directory is used.')
+	organization_parser.add_argument('-f', metavar='folder', type=str, action='store', 
+											help='Name of the main folder where the organized folders will be stored. \
+												If no name is provided then the default name will be \'organized_by<organization method>\'')
+	organization_parser.add_argument('organization_method', type=str, action='store', choices=['day', 'month', 'year', 'shutter_speed', 'lens', 'aperture', 'ISO', 'focal_length'], 
+											help='Organize the content by one of the following parameters.')
+
+	return parser
 
 
 """
@@ -53,11 +62,23 @@ def parse_args(args):
 		if not args.d.lower().endswith('/'):
 			args.d += '/'
 
+	if args.p:
+		try:
+			if '/' in args.p:
+				raise Exception('Invalid prefix - ' + args.p + '\nThe prefix can\'t contain the following character: \'/\'')
+		except Exception as e:
+			print(e)
+			exit(1)
+
 #####################################################
 
 
 ############# rn - rename related methods #############
 
+"""
+Renames the files in the given directory args.d
+@param ArgumentParser args
+"""
 def rename(args):
 	i = args.v
 	for file in os.listdir(args.d):
@@ -67,7 +88,10 @@ def rename(args):
 		extension = os.path.splitext(file)[1] #There might be a better way to do this
 		new_file_name = args.d + args.p + i + extension
 		i = next_value(i)
-		os.rename(file_path, new_file_name)
+		try:
+			os.rename(file_path, new_file_name)
+		except FileExistsError:
+			print('A file with the name ' + new_file_name + ' already exists.')
 
 
 """
@@ -204,7 +228,7 @@ def process_aperture_data(data, data_info):
 #######################################################
 
 def main():
-	add_args()
+	parser = create_parser()
 	args = parser.parse_args()
 	parse_args(args)
 
