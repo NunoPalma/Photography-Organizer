@@ -140,7 +140,10 @@ def organize(args, data_info, process_data):
 		else:
 			organization_folder = args.f
 
-	os.mkdir(args.d + organization_folder)
+	try:
+		os.mkdir(args.d + organization_folder)
+	except FileExistsError:
+		print('The given file name ' + args.d + organization_folder + ' already exists.')
 
 	for file in os.listdir(args.d):
 		file_path = args.d + file
