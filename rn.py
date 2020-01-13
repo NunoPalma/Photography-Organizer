@@ -63,7 +63,7 @@ def add_args():
 
 	organization_parser.add_argument('-d', type=str, action='store', default=directory, help='Desired directory. If no directory is given, the current directory is used.')
 	organization_parser.add_argument('-f', type=str, action='store', help='Desired directory. If no directory is given, the current directory is used.')
-	organization_parser.add_argument('organization_method', type=str, action='store', choices=['day', 'month', 'year', 'shutter_speed', 'lens', 'aperture'], help='Organize the content by one of the following parameters')
+	organization_parser.add_argument('organization_method', type=str, action='store', choices=['day', 'month', 'year', 'shutter_speed', 'lens', 'aperture', 'ISO', 'focal_length'], help='Organize the content by one of the following parameters')
 
 
 
@@ -90,11 +90,16 @@ def organize_data(args):
 		organize(args, ['LensModel', 'EXIF LensModel'], process_lens_model_data)
 	elif args.organization_method == 'aperture':
 		organize(args, ['FNumber', 'EXIF FNumber'], process_aperture_data)
+	elif args.organization_method == 'ISO':
+		organize(args, ['ISOSpeedRatings', 'EXIF ISOSpeedRatings'], process_ISO_data)
+	elif args.organization_method == 'focal_length':
+		organize(args, ['FocalLength', 'EXIF FocalLength'], process_focal_length_data)
+
 	
 
 def get_image_data(image_path, stop_tag, data_field):
 	with open(image_path, 'rb') as image:
-		tags = exifread.process_file(image, details=False)
+		tags = exifread.process_file(image, stop_tag=stop_tag, details=False)
 		return str(tags[data_field])
 
 
@@ -108,6 +113,14 @@ def process_shutter_speed_data(data, data_info):
 
 def process_lens_model_data(data, data_info):
 	return '-'.join(data.split('/'))
+
+
+def process_ISO_data(data, data_info):
+	return data
+
+
+def process_focal_length_data(data, data_info):
+	return data + 'mm'
 
 
 def process_aperture_data(data, data_info):
