@@ -11,8 +11,8 @@ pip3 install exifread
 
 ## Running the tests
 
-## Commands   
- Markup : * rn
+## Commands
+           Markup : * rn
               * -h >> Show help message.
               * -d >> Desired directory. If no directory is specified, the current directory is used.
               * -p >> Desired prefix.
