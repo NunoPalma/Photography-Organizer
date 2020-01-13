@@ -14,7 +14,53 @@ organization_parser.set_defaults(which='order')
 directory = os.getcwd() 
 
 
-############# rn - rename #############
+
+############# general auxiliary methods #############
+
+"""
+Checks if the given file_path leads to a valid file type.
+
+@param String file_path
+@return a boolean value	-	True if the file_path is valid
+						-	False if it isn't
+"""
+def validate_file(file_path):
+	if os.path.isfile(file_path):
+		if file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.cr2')): #Figure out if the user should specify the extensions
+			return True
+	return False
+
+
+"""
+Defines how command-line arguments should be parsed.
+"""
+def add_args():
+	rename_parser.add_argument('-d', type=str, action='store', default=directory, help='Desired directory. If no directory is given, the current directory is used.')
+	rename_parser.add_argument('-p', type=str, action='store', default='', help='Desired prefix.')
+	rename_parser.add_argument('-v', type=str, action='store', default='0', help='The desired starting value.')
+
+	organization_parser.add_argument('-d', type=str, action='store', default=directory, help='Desired directory. If no directory is given, the current directory is used.')
+	organization_parser.add_argument('-f', type=str, action='store', help='Desired directory. If no directory is given, the current directory is used.')
+	organization_parser.add_argument('organization_method', type=str, action='store', choices=['day', 'month', 'year', 'shutter_speed', 'lens', 'aperture', 'ISO', 'focal_length'], help='Organize the content by one of the following parameters')
+
+
+"""
+Validates the given arguments.
+@param ArgumentParser args
+"""
+def parse_args(args):
+	if args.d:
+		if not os.path.isdir(args.d):
+			print("Invalid directory - " + args.d)
+			exit(1)
+		if not args.d.lower().endswith('/'):
+			args.d += '/'
+
+#####################################################
+
+
+############# rn - rename related methods #############
+
 def rename(args):
 	i = args.v
 	for file in os.listdir(args.d):
@@ -27,6 +73,10 @@ def rename(args):
 		os.rename(file_path, new_file_name)
 
 
+"""
+@param String/int value
+@return The correspondent adjacent value to value.
+"""
 def next_value(value):
 	if value[0] >= '0' and value[0] <= '9':
 		value = int(value) + 1
@@ -37,6 +87,12 @@ def next_value(value):
 		return aux(value, ['a', 'z'])
 
 
+"""
+Auxiliary method to next_value, if the given value is a String
+Returns the correspondent adjacent value to value.
+@param String value
+@param List<String> limit => [lower_limit, upper_limit]
+"""
 def aux(value, limit):
 	if value == '':
 		return limit[0]
@@ -45,38 +101,15 @@ def aux(value, limit):
 	else:
 		return value[:-1] + chr(ord(value[-1]) + 1)
 
-
-#######################################
-
-
-def validate_file(file_path):
-	if os.path.isfile(file_path):
-		if file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.cr2')): #Figure out if the user should specify the extensions
-			return True
-	return False
+#######################################################
 
 
-def add_args():
-	rename_parser.add_argument('-d', type=str, action='store', default=directory, help='Desired directory. If no directory is given, the current directory is used.')
-	rename_parser.add_argument('-p', type=str, action='store', default='', help='Desired prefix.')
-	rename_parser.add_argument('-v', type=str, action='store', default='0', help='The desired starting value.')
+###########  org - organize related methods  ##########
 
-	organization_parser.add_argument('-d', type=str, action='store', default=directory, help='Desired directory. If no directory is given, the current directory is used.')
-	organization_parser.add_argument('-f', type=str, action='store', help='Desired directory. If no directory is given, the current directory is used.')
-	organization_parser.add_argument('organization_method', type=str, action='store', choices=['day', 'month', 'year', 'shutter_speed', 'lens', 'aperture', 'ISO', 'focal_length'], help='Organize the content by one of the following parameters')
-
-
-
-
-def parse_args(args):
-	if args.d:
-		if not os.path.isdir(args.d):
-			print("Invalid directory - " + args.d)
-			exit(1)
-		if not args.d.lower().endswith('/'):
-			args.d += '/'
-
-
+"""
+Specifies which processing method is used depending on the organization method.
+@param ArgumentParser args
+"""
 def organize_data(args):
 	if args.organization_method == 'year':
 		organize(args, ['DateTimeOriginal', 'EXIF DateTimeOriginal', 1], process_date_time_data)
@@ -95,8 +128,45 @@ def organize_data(args):
 	elif args.organization_method == 'focal_length':
 		organize(args, ['FocalLength', 'EXIF FocalLength'], process_focal_length_data)
 
-	
 
+"""
+@param ArgumentParser args
+@param List data_info
+@param method process_data
+"""
+def organize(args, data_info, process_data):
+	if not args.f:
+		organization_folder = 'organized_by_' + args.organization_method + '/'
+	else:
+		if not args.f.endswith('/'):
+			organization_folder = args.f + '/'
+		else:
+			organization_folder = args.f
+
+	os.mkdir(args.d + organization_folder)
+
+	for file in os.listdir(args.d):
+		file_path = args.d + file
+		if not validate_file(file_path):
+			continue
+
+		data = get_image_data(file_path, data_info[0], data_info[1])
+		data = process_data(data, data_info)
+	
+		path = args.d + organization_folder + data
+		if not os.path.isdir(path):
+			os.mkdir(path)
+
+		copy(file_path, path)	
+
+
+"""
+Processes the image at the given path.
+@param String image_path
+@param String stop_tag
+@param String data_field
+@return String Data from the correspondent data_field
+"""
 def get_image_data(image_path, stop_tag, data_field):
 	with open(image_path, 'rb') as image:
 		tags = exifread.process_file(image, stop_tag=stop_tag, details=False)
@@ -131,32 +201,7 @@ def process_aperture_data(data, data_info):
 	return data[0]
 
 
-def organize(args, data_info, process_data):
-	if not args.f:
-		organization_folder = 'organized_by_' + args.organization_method + '/'
-	else:
-		if not args.f.endswith('/'):
-			organization_folder = args.f + '/'
-		else:
-			organization_folder = args.f
-
-	os.mkdir(args.d + organization_folder)
-
-	for file in os.listdir(args.d):
-		file_path = args.d + file
-		if not validate_file(file_path):
-			continue
-
-		data = get_image_data(file_path, data_info[0], data_info[1])
-		data = process_data(data, data_info)
-	
-		path = args.d + organization_folder + data
-		if not os.path.isdir(path):
-			os.mkdir(path)
-
-		copy(file_path, path)
-
-
+#######################################################
 
 def main():
 	add_args()
