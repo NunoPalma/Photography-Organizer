@@ -63,7 +63,7 @@ def add_args():
 
 	organization_parser.add_argument('-d', type=str, action='store', default=directory, help='Desired directory. If no directory is given, the current directory is used.')
 	organization_parser.add_argument('-f', type=str, action='store', help='Desired directory. If no directory is given, the current directory is used.')
-	organization_parser.add_argument('organization_method', type=str, action='store', choices=['day', 'month', 'year', 'shutter_speed'], help='Organize the content by one of the following parameters')
+	organization_parser.add_argument('organization_method', type=str, action='store', choices=['day', 'month', 'year', 'shutter_speed', 'lens'], help='Organize the content by one of the following parameters')
 
 
 
@@ -86,11 +86,13 @@ def organize_data(args):
 		organize(args, ['DateTimeOriginal', 'EXIF DateTimeOriginal', 3], process_date_time_data)
 	elif args.organization_method == 'shutter_speed':
 		organize(args, ['ExposureTime', 'EXIF ExposureTime'], process_shutter_speed_data)
+	elif args.organization_method == 'lens':
+		organize(args, ['LensModel', 'EXIF LensModel'], process_lens_model_data)
 	
 
 def get_image_data(image_path, stop_tag, data_field):
 	with open(image_path, 'rb') as image:
-		tags = exifread.process_file(image, stop_tag=stop_tag, details=False)
+		tags = exifread.process_file(image, details=False)
 		return str(tags[data_field])
 
 
@@ -100,6 +102,11 @@ def process_date_time_data(data, data_info):
 
 def process_shutter_speed_data(data, data_info):
 	return '-'.join(data.split('/')) + 's'
+
+
+def process_lens_model_data(data, data_info):
+	return '-'.join(data.split('/'))
+
 
 def organize(args, data_info, process_data):
 	if not args.f:
