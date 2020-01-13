@@ -8,10 +8,25 @@ Command-line application to help reduce photography's organization time consumpt
 ```
 pip3 install exifread
 ```
+### Installing
+```
+pip3 install phorg
+```
 
-## Running the tests
+### Running the tests
+The current available tests are some very basic 
+* Clone the repository
+```
+git clone https://github.com/NunoPalma/Photography-Organizer.git
+```
+* Run the tests
+```
+bash test/testing_scripts/run_tests.sh
+```
 
-## Commands
+
+## Usage
+### Commands
  * rn
    * -h >> Show help message.
    * -d >> Desired directory. If no directory is specified, the current directory is used.
