@@ -1,1 +1,1 @@
-echo "python ../../phorg.py rn -d ../ -p testing_ -v 1"
+python phorg.py rn -d test -p testing_ -v 1

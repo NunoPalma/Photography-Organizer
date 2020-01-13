@@ -62,7 +62,7 @@ def parse_args(args):
 		if not args.d.lower().endswith('/'):
 			args.d += '/'
 
-	if args.p:
+	if args.which == 'rn' and args.p:
 		try:
 			if '/' in args.p:
 				raise Exception('Invalid prefix - ' + args.p + '\nThe prefix can\'t contain the following character: \'/\'')
@@ -175,7 +175,10 @@ def organize(args, data_info, process_data):
 			continue
 
 		data = get_image_data(file_path, data_info[0], data_info[1])
-		data = process_data(data, data_info)
+		if data:
+			data = process_data(data, data_info)
+		else:
+			data = 'Unknown'
 	
 		path = args.d + organization_folder + data
 		if not os.path.isdir(path):
@@ -190,11 +193,16 @@ Processes the image at the given path.
 @param String stop_tag
 @param String data_field
 @return String Data from the correspondent data_field
+		OR None if the field doesn't exist
 """
 def get_image_data(image_path, stop_tag, data_field):
 	with open(image_path, 'rb') as image:
 		tags = exifread.process_file(image, stop_tag=stop_tag, details=False)
-		return str(tags[data_field])
+		try:
+			return str(tags[data_field])
+		#Some images don't contain the desired metadata
+		except KeyError:
+			return None
 
 
 def process_date_time_data(data, data_info):
@@ -236,6 +244,7 @@ def main():
 		rename(args)
 	else:
 		organize_data(args)		
+
 
 if __name__ == "__main__": 
 	main()
