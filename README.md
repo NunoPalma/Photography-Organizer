@@ -4,6 +4,7 @@ Command-line application to help reduce photography's organization time consumpt
 ## Getting Started
 
 ### Prerequisites
+exifread - https://github.com/ianare/exif-py
 ```
 pip3 install exifread
 ```
