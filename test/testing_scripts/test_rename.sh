@@ -1,1 +1,1 @@
-python phorg.py rn -d test -p testing_ -v 1
+python3 phorg.py rn -d test -p testing_ -v 1

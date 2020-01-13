@@ -1,1 +1,1 @@
-python phorg.py org day -d test -f testing_folder
+python3 phorg.py org day -d test -f testing_folder
