@@ -62,6 +62,7 @@ def add_args():
 	rename_parser.add_argument('-v', type=str, action='store', default='0', help='The desired starting value.')
 
 	organization_parser.add_argument('-d', type=str, action='store', default=directory, help='Desired directory. If no directory is given, the current directory is used.')
+	organization_parser.add_argument('-f', type=str, action='store', help='Desired directory. If no directory is given, the current directory is used.')
 	organization_parser.add_argument('organization_method', type=str, action='store', choices=['day', 'month', 'year', 'shutter_speed'], help='Organize the content by one of the following parameters')
 
 
@@ -101,7 +102,14 @@ def process_shutter_speed_data(data, data_info):
 	return '-'.join(data.split('/')) + 's'
 
 def organize(args, data_info, process_data):
-	organization_folder = 'organized_by_date/'
+	if not args.f:
+		organization_folder = 'organized_by_' + args.organization_method + '/'
+	else:
+		if not args.f.endswith('/'):
+			organization_folder = args.f + '/'
+		else:
+			organization_folder = args.f
+
 	os.mkdir(args.d + organization_folder)
 
 	for file in os.listdir(args.d):
@@ -128,8 +136,7 @@ def main():
 	if args.which == 'rn':
 		rename(args)
 	else:
-		organize_data(args)
-		
+		organize_data(args)		
 
 if __name__ == "__main__": 
 	main()
