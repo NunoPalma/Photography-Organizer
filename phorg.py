@@ -1,7 +1,7 @@
 import argparse 
 import os
-from shutil import copy
 import exifread
+from shutil import copy
 
 
 parser = argparse.ArgumentParser()
@@ -10,9 +10,6 @@ rename_parser = sub_parsers.add_parser('rn')
 rename_parser.set_defaults(which='rn')
 organization_parser = sub_parsers.add_parser('order')
 organization_parser.set_defaults(which='order')
-
-directory = os.getcwd() 
-
 
 
 ############# general auxiliary methods #############
@@ -35,11 +32,11 @@ def validate_file(file_path):
 Defines how command-line arguments should be parsed.
 """
 def add_args():
-	rename_parser.add_argument('-d', metavar='directory', type=str, action='store', default=directory, help='Desired directory. If no directory is given, the current directory is used.')
+	rename_parser.add_argument('-d', metavar='directory', type=str, action='store', default=os.getcwd(), help='Desired directory. If no directory is given, the current directory is used.')
 	rename_parser.add_argument('-p', metavar='prefix', type=str, action='store', default='', help='Desired prefix.')
 	rename_parser.add_argument('-v', metavar='value', type=str, action='store', default='0', help='The desired starting value.')
 
-	organization_parser.add_argument('-d', metavar='directory', type=str, action='store', default=directory, help='Desired directory. If no directory is given, the current directory is used.')
+	organization_parser.add_argument('-d', metavar='directory', type=str, action='store', default=os.getcwd(), help='Desired directory. If no directory is given, the current directory is used.')
 	organization_parser.add_argument('-f', metavar='folder', type=str, action='store', help='Name of the main folder where the organized folders will be stored. If no name is provided then the default name will be \'organized_by<organization method>\'')
 	organization_parser.add_argument('organization_method', type=str, action='store', choices=['day', 'month', 'year', 'shutter_speed', 'lens', 'aperture', 'ISO', 'focal_length'], help='Organize the content by one of the following parameters.')
 
